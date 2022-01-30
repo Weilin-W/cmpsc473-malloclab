@@ -1,11 +1,10 @@
 /*
  * mm.c
  *
- * Name: [FILL IN]
+ * Name: [Wei Lin Weng]
  *
- * NOTE TO STUDENTS: Replace this header comment with your own header
- * comment that gives a high level description of your solution.
- * Also, read malloclab.pdf carefully and in its entirety before beginning.
+ * Dynamic storage allocator solution that has implementations with
+ * fast efficient malloc, free, and realloc functions.
  *
  */
 #include <assert.h>
@@ -56,12 +55,35 @@ static size_t align(size_t x)
 }
 
 /*
+ * Create Struct node_t
+ */
+ typedef struct __node_t {
+     int size;
+     struct __node_t *next;
+ }node_t;
+
+/*
+ * Create Header with size and num
+ */
+ typedef struct {
+     int size;
+     int num;
+ } header_t;
+
+int check_mm_init = 0;
+/*
  * mm_init: returns false on error, true on success.
  */
 bool mm_init(void)
 {
     // IMPLEMENT THIS
-    return true;
+    if (check_mm_init == 0){
+        //error occurred
+        return false;
+    }else{
+        check_mm_init = 1;
+        return true;
+    }
 }
 
 /*
@@ -70,7 +92,19 @@ bool mm_init(void)
 void* malloc(size_t size)
 {
     // IMPLEMENT THIS
-    return NULL;
+    char buffer = [1024];
+    // Construct Alignment
+    const size_t size_mm = align(size);
+
+    //check if size_mm = 0 or >
+    if (size_mm > 0){
+    //create buffer of size_mm
+    char buffer = [size_mm];
+    mm_memcpy(buffer,temp_buffer);
+    return buffer;
+    }else{
+        return NULL;
+    }
 }
 
 /*
@@ -79,6 +113,7 @@ void* malloc(size_t size)
 void free(void* ptr)
 {
     // IMPLEMENT THIS
+    header_t *hptr = (header_t *) ptr - 1;
     return;
 }
 
