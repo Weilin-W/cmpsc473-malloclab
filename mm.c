@@ -78,7 +78,7 @@ bool mm_init(void)
 {
     // IMPLEMENT THIS
     if (check_mm_init == 0){
-        //error occurred
+        //Error occurred
         return false;
     }else{
         check_mm_init = 1;
@@ -92,10 +92,10 @@ bool mm_init(void)
 void* malloc(size_t size)
 {
     // IMPLEMENT THIS
-    char buffer = [1024];
+    //char buffer = [1024];
     // Construct Alignment
     const size_t size_mm = align(size);
-
+    struct node_t *node;
     //check if size_mm = 0 or >
     if (size_mm > 0){
     //create buffer of size_mm
@@ -127,7 +127,23 @@ void* realloc(void* oldptr, size_t size)
     if(oldptr == NULL){
         return mm_malloc(size);
     }
-    return NULL;
+    //Construct a buf node
+    struct node_t* buf_ptr = (node_t*) oldptr - 1;
+    //Check if the size match
+    if(buf_ptr->size >= size){
+        return oldptr;
+    }else{
+        //Create a size of the input size and copy over
+        //if size empty, return NULL, else memory copy and free oldptr
+        (void *)n_ptr = mm_malloc(size);
+        if(n_ptr == NULL){
+            return NULL;
+        }else{
+            mm_memcpy(n_ptr, oldptr, buf_ptr->size);
+            mm_free(oldptr);
+            return (n_ptr);
+        }
+    }
 }
 
 /*
