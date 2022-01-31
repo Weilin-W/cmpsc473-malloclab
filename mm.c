@@ -72,7 +72,6 @@ static size_t align(size_t x)
 
 //Global Variables
 int check_mm_init = 0;
-(void *)headptr = NULL;
 
 
 /*
@@ -81,11 +80,15 @@ int check_mm_init = 0;
 bool mm_init(void)
 {
     // IMPLEMENT THIS
+    //Create prolog and in the slide.......
+    //Alignment---Alignment()
+    //No need to check for init
     if (check_mm_init == 0){
         //Error occurred
         return false;
     }else{
         check_mm_init = 1;
+        //Success
         return true;
     }
 }
@@ -97,6 +100,7 @@ void* malloc(size_t size)
 {
     // IMPLEMENT THIS
     //char buffer = [1024];
+    // Find space, free size of heap, multiple heap block, allocate, find free block, use, else create new block
     // Construct Alignment
     const size_t size_mm = align(size);
     struct node_t *node;
@@ -113,6 +117,12 @@ void* malloc(size_t size)
 void free(void* ptr)
 {
     // IMPLEMENT THIS
+    if(ptr == NULL){
+        return;
+    }else{
+        //free block, write implementation add back to free list.
+        //Change allocation....etc
+    }
     header_t *hptr = (header_t *) ptr - 1;
     return;
 }
@@ -129,21 +139,25 @@ void* realloc(void* oldptr, size_t size)
     }
     //Construct a buf node
     struct node_t* buf_ptr = (node_t*) oldptr - 1;
+    //Check size equals 0
+    if(size == 0){
+        free(oldptr);
+    }
     //Check if the size match
     if(buf_ptr->size >= size){
         return oldptr;
     }else{
         //Create a size of the input size and copy over
         //if size empty, return NULL, else memory copy and free oldptr
-        (void *)n_ptr = malloc(size);
+        struct node_t* n_ptr = malloc(size);
         if(n_ptr == NULL){
             return NULL;
         }else{
-            mm_memcpy(n_ptr, oldptr, buf_ptr->size);
+            memcpy(n_ptr, oldptr, buf_ptr->size);
             free(oldptr);
-            return (n_ptr);
         }
     }
+    return (n_ptr);
 }
 
 /*
