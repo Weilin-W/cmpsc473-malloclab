@@ -125,7 +125,7 @@ void* realloc(void* oldptr, size_t size)
     // IMPLEMENT THIS
     // Check if oldptr equals NUll, if it does, then put size into mm_malloc
     if(oldptr == NULL){
-        return mm_malloc(size);
+        return malloc(size);
     }
     //Construct a buf node
     struct node_t* buf_ptr = (node_t*) oldptr - 1;
@@ -135,12 +135,12 @@ void* realloc(void* oldptr, size_t size)
     }else{
         //Create a size of the input size and copy over
         //if size empty, return NULL, else memory copy and free oldptr
-        (void *)n_ptr = mm_malloc(size);
+        (void *)n_ptr = malloc(size);
         if(n_ptr == NULL){
             return NULL;
         }else{
             mm_memcpy(n_ptr, oldptr, buf_ptr->size);
-            mm_free(oldptr);
+            free(oldptr);
             return (n_ptr);
         }
     }
