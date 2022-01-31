@@ -123,6 +123,10 @@ void free(void* ptr)
 void* realloc(void* oldptr, size_t size)
 {
     // IMPLEMENT THIS
+    // Check if oldptr equals NUll, if it does, then put size into mm_malloc
+    if(oldptr == NULL){
+        return mm_malloc(size);
+    }
     return NULL;
 }
 
