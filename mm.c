@@ -70,7 +70,11 @@ static size_t align(size_t x)
      int num;
  } header_t;
 
+//Global Variables
 int check_mm_init = 0;
+(void *)headptr = NULL;
+
+
 /*
  * mm_init: returns false on error, true on success.
  */
@@ -98,10 +102,6 @@ void* malloc(size_t size)
     struct node_t *node;
     //check if size_mm = 0 or >
     if (size_mm > 0){
-    //create buffer of size_mm
-    char buffer = [size_mm];
-    mm_memcpy(buffer,temp_buffer);
-    return buffer;
     }else{
         return NULL;
     }
