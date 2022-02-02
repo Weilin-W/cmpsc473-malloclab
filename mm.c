@@ -205,9 +205,11 @@ void free(void* ptr)
     }else{
         //free block, write implementation add back to free list.
         //Change allocation....etc
+        size_t size = GET_SIZE(HDRP(bp));
+        PUT(HDRP(bp), PACK(size, 0));
+        PUT(FTRP(bp), PACK(size, 0));
+        coalesce(bp);
     }
-    header_t *hptr = (header_t *) ptr - 1;
-    return;
 }
 
 /*
