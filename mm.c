@@ -99,35 +99,35 @@ int MAX(int x, int y){
 }
 
 //Pack a size and allocated bit into a word
-static void PACK(size_t size, alloc){
-    ((size) | (alloc));
+static uint64_t PACK(size_t size, bool alloc){
+    return ((size) | (alloc));
 }
 //Read and write a word at address p
-static unsigned int GET(p){
+static unsigned int GET(void* p){
     return (*(unsigned int* )(p));
 }
-static unsigned int PUT(p, val){
-    return (*(unsigned int* )(p) = (val));
+static void PUT(void* p, unsigned int val){
+    (*(unsigned int* )(p) = (val));
 }
 //Read the size and allocated fields from address p
-static void GET_SIZE(p){
+static unsigned int GET_SIZE(void* p){
     return (GET(p) & !(DSIZE - 1));
 }
-static void GET_ALLOC(p){
+static bool GET_ALLOC(void* p){
     return (GET(p) & 0x1);
 }
 //Given block ptr ptr, compute address of its header and footer
-static void HDRP(ptr){
+static char* HDRP(void* ptr){
     return ((char *)(ptr)-WSIZE);
 }
-static void FTRP(ptr){
+static char* FTRP(void* ptr){
     return ((char *)(ptr) + GET_SIZE(HDRP(ptr)) - DSIZE);
 }
 //Given block ptr ptr, compute address of next and previous blocks
-static void NEXT_BLKP(ptr){
+static char* NEXT_BLKP(void* ptr){
     return ((char *)(ptr) + GET_SIZE(((char *)(ptr) - WSIZE)));
 }
-static void PREV_BLKP(ptr){
+static char* PREV_BLKP(void* ptr){
     return ((char *)(ptr) - GET_SIZE(((char *)(ptr) - DSIZE)));
 }
 
