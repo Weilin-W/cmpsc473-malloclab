@@ -97,23 +97,60 @@ static size_t align(size_t x)
 /*
  * Extends the heap with a new free block
  */
- static void *extend_heap(size_t words){
-     char *bp;
-     size_t size;
+static void *extend_heap(size_t words){
 
-     //Allocate an even number of words to maintain alignment
-     size = (words % 2) ? (words + 1) * WSIZE : words *WSIZE;
-     if((long)(bp = mem_sbrk(size)) == -1){
-         return(NULL);
-     }
-     //Initialize free block header/footer and the epilogue header
-     PUT(HDRP(bp), PACK(size, 0));  //Free block header
-     PUT(FTRP(bp), PACK(size, 0));  //Free block footer
-     PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1));  //New epilogue header
+    char *bp;
+    size_t size;
 
-     //Coalesce if the previous block was free
-     return Coalesce(bp);
+    //Allocate an even number of words to maintain alignment
+    size = (words % 2) ? (words + 1) * WSIZE : words *WSIZE;
+    if((long)(bp = mem_sbrk(size)) == -1){
+        return(NULL);
+    }
+    //Initialize free block header/footer and the epilogue header
+    PUT(HDRP(bp), PACK(size, 0));  //Free block header
+    PUT(FTRP(bp), PACK(size, 0));  //Free block footer
+    PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1));  //New epilogue header
+
+    //Coalesce if the previous block was free
+    return Coalesce(bp);
  }
+ 
+ /*
+  * coalesce pointer function
+  */
+static void *coalesce(void* bp){
+    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+    size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+    size_t size = GET_SIZE(HDRP(bp));
+
+    //Case 1
+    if(prev_alloc && next_alloc){
+        return bp; //block pointer
+    }
+    //Case 2
+    else if(prev_alloc && !next_alloc){
+        size += GET_SIZE(HDRP(NEXT_BLKP(bp))); //Increase size to next block header size
+        PUT(HDRP(bp), PACK(size, 0)); //Free Header
+        PUT(FTRP(bp), PACK(size, 0)); //Free Footer
+    }
+    //Case 3
+    else if(!prev_alloc && next_alloc){
+        size += GET_SIZE(HDRP(PREV_BLKP(bp))); //Increase size to previous block header size
+        PUT(FTRP(bp), PACK(size, 0)); //Free Footer
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size. 0)); //Free previous header
+        bp = PREV_BLKP(bp);
+    }
+    //Case 4
+    else{
+        size += GET_SIZE(HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp))); //Increase size to sum of previous block header size and next block footer size
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0)); //Free previous block header
+        PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0)); //Free next block footer
+        bp = PREV_BLKP(bp); //Set block pointer to previous block pointer
+    }
+    return (bp); //return block pointer
+}
+
 
 
 /*
