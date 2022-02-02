@@ -71,19 +71,29 @@ static size_t align(size_t x)
  } header_t;
 
 /*
- * Basic constants and macros for manipulating the free list.
+ * Basic constants and static function for manipulating the free list.
  */
 #define WSIZE  4 //Word and header/footer size
 #define DSIZE  8 //Double word size
 #define CHUNKSIZE (1<<12) //Extend heap by this amount
 
-#define MAX(x, y)((x)>(y)?(x):(y))
+static int MAX(x, y){
+    if(x > y){
+        return x;
+    }else{
+        return y;
+    }
+}
 
 //Pack a size and allocated bit into a word
 #define PACK(size, alloc)((size) | (alloc))
 //Read and write a word at address p
-#define GET(p) (*(unsigned int* )(p))
-#define PUT(p, val) (*(unsigned int* )(p) = (val))
+static unsigned int GET(p){
+    return (*(unsigned int* )(p));
+}
+static unsigned int PUT(p, val){
+    return (*(unsigned int* )(p) = (val));
+}
 //Read the size and allocated fields from address p
 #define GET_SIZE(p) (GET(p) & ~0x7)
 #define GET_ALLOC(p) (GET(p) & 0x1)
