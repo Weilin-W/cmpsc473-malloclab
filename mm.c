@@ -54,22 +54,6 @@ static size_t align(size_t x)
     return ALIGNMENT * ((x+ALIGNMENT-1)/ALIGNMENT);
 }
 
-/*
- * Create Struct node_t
- */
- typedef struct __node_t {
-     int size;
-     struct __node_t *next;
- }node_t;
-
-/*
- * Create Header with size and num
- */
- typedef struct {
-     int size;
-     int num;
- } header_t;
-
 /* 
  *Global Variables
  */
