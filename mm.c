@@ -261,14 +261,17 @@ void free(void* ptr)
     // IMPLEMENT THIS
     if(ptr == NULL){
         return;
-    }else{
-        //free block, write implementation add back to free list.
-        //Change allocation....etc
-        size_t size = GET_SIZE(HDRP(ptr));
-        PUT(HDRP(ptr), PACK(size, 0));
-        PUT(FTRP(ptr), PACK(size, 0));
-        coalesce(ptr);
     }
+    //free block, write implementation add back to free list.
+    //Change allocation....etc
+    size_t size = GET_SIZE(HDRP(ptr));
+    if(heap_listp == NULL){
+        mm_init();
+    }
+    PUT(HDRP(ptr), PACK(size, 0));
+    PUT(FTRP(ptr), PACK(size, 0));
+    coalesce(ptr);
+    
 }
 
 /*
@@ -277,34 +280,31 @@ void free(void* ptr)
 void* realloc(void* oldptr, size_t size)
 {
     // IMPLEMENT THIS
+    size_t oldsize;
+    void* newptr;
     // Check if oldptr equals NUll, if it does, then put size into mm_malloc
-    /*
     if(oldptr == NULL){
         return malloc(size);
     }
-    //Construct a buf node
-    struct node_t* buf_ptr = (node_t*) oldptr - 1;
     //Check size equals 0
     if(size == 0){
         free(oldptr);
+        return NULL;
     }
-    //Check if the size match
-    if(buf_ptr->size >= size){
-        return oldptr;
+    newptr = malloc(size);
+    //Create a size of the input size and copy over
+    if(newptr == NULL){
+        return NULL;
     }else{
-        //Create a size of the input size and copy over
-        //if size empty, return NULL, else memory copy and free oldptr
-        struct node_t* n_ptr = malloc(size);
-        if(n_ptr == NULL){
-            return NULL;
-        }else{
-            memcpy(n_ptr, oldptr, buf_ptr->size);
-            free(oldptr);
+        //Get oldptr size, copy over oldptr size to newly created size ptr, free the oldptr
+        oldsize = GET_SIZE(HDRP(oldptr));
+        if(oldsize > size){
+            oldsize = size;
         }
+        memcpy(newptr, oldptr, oldsize);
+        free(oldptr);
     }
-    return (n_ptr);
-    */
-    return NULL;
+    return (newptr);
 }
 
 /*
