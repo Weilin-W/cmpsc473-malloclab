@@ -87,14 +87,14 @@ static uint64_t PACK(size_t size, bool alloc){
     return ((size) | (alloc));
 }
 //Read and write a word at address p
-static unsigned int GET(void* p){
+static uint32_t GET(void* p){
     return (*(unsigned int* )(p));
 }
-static void PUT(void* p, unsigned int val){
+static void PUT(void* p, uint32_t val){
     (*(unsigned int* )(p) = (val));
 }
 //Read the size and allocated fields from address p
-static unsigned int GET_SIZE(void* p){
+static uint64_t GET_SIZE(void* p){
     return (GET(p) & !(DSIZE - 1));
 }
 static bool GET_ALLOC(void* p){
