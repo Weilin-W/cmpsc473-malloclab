@@ -73,11 +73,11 @@ static size_t align(size_t x)
 /*
  * Basic constants and macros for manipulating the free list.
  */
- #define WSIZE = 4 //Word and header/footer size
- #define DSIZE = 8 //Double word size
- #define CHUNKSIZE (1<<12) //Extend heap by this amount
+#define WSIZE  4 //Word and header/footer size
+#define DSIZE  8 //Double word size
+#define CHUNKSIZE (1<<12) //Extend heap by this amount
 
-#define MAX(x, y)((x)>(y)?(x):y)
+#define MAX(x, y)((x)>(y)?(x):(y))
 
 //Pack a size and allocated bit into a word
 #define PACK(size, alloc)((size) | (alloc))
@@ -113,7 +113,7 @@ static void *extend_heap(size_t words){
     PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1));  //New epilogue header
 
     //Coalesce if the previous block was free
-    return Coalesce(bp);
+    return coalesce(bp);
  }
  
  /*
@@ -138,7 +138,7 @@ static void *coalesce(void* bp){
     else if(!prev_alloc && next_alloc){
         size += GET_SIZE(HDRP(PREV_BLKP(bp))); //Increase size to previous block header size
         PUT(FTRP(bp), PACK(size, 0)); //Free Footer
-        PUT(HDRP(PREV_BLKP(bp)), PACK(size. 0)); //Free previous header
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0)); //Free previous header
         bp = PREV_BLKP(bp);
     }
     //Case 4
@@ -254,10 +254,10 @@ void free(void* ptr)
     }else{
         //free block, write implementation add back to free list.
         //Change allocation....etc
-        size_t size = GET_SIZE(HDRP(bp));
-        PUT(HDRP(bp), PACK(size, 0));
-        PUT(FTRP(bp), PACK(size, 0));
-        coalesce(bp);
+        size_t size = GET_SIZE(HDRP(ptr));
+        PUT(HDRP(ptr), PACK(size, 0));
+        PUT(FTRP(ptr), PACK(size, 0));
+        coalesce(ptr);
     }
 }
 
@@ -268,6 +268,7 @@ void* realloc(void* oldptr, size_t size)
 {
     // IMPLEMENT THIS
     // Check if oldptr equals NUll, if it does, then put size into mm_malloc
+    /*
     if(oldptr == NULL){
         return malloc(size);
     }
@@ -292,6 +293,8 @@ void* realloc(void* oldptr, size_t size)
         }
     }
     return (n_ptr);
+    */
+    return NULL;
 }
 
 /*
