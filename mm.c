@@ -227,7 +227,7 @@ bool mm_init(void)
     heap_listp += (2*WSIZE);
 
     //Extend the empty heap with a free block of CHUNKSIZE bytes
-    if(extend_heap(CHUNKSIZE*(64)) == NULL){
+    if(extend_heap(CHUNKSIZE*(128)) == NULL){
         return false;
     }
     return true;
@@ -262,7 +262,7 @@ void* malloc(size_t size)
 
     //No fit found, Get more memory and place the block
     extendsize = MAX(asize, CHUNKSIZE);
-    if((ptr = extend_heap(extendsize*(64))) == NULL){
+    if((ptr = extend_heap(extendsize*(128))) == NULL){
         return NULL;
     }
     place(ptr, asize);
