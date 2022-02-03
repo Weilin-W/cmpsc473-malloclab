@@ -72,7 +72,7 @@ static void place(void *ptr, size_t asize);
  */
 #define WSIZE  8 //Word and header/footer size
 #define DSIZE  16 //Double word size
-//#define CHUNKSIZE (1<<12) //Extend heap by this amount
+#define CHUNKSIZE (1<<12) //Extend heap by this amount
 
 static size_t MAX(size_t x, size_t y){
     if(x > y){
@@ -227,7 +227,7 @@ bool mm_init(void)
     heap_listp += (2*WSIZE);
 
     //Extend the empty heap with a free block of CHUNKSIZE bytes
-    if(extend_heap(4096) == NULL){
+    if(extend_heap(CHUNKSIZE*(15)) == NULL){
         return false;
     }
     return true;
@@ -261,8 +261,8 @@ void* malloc(size_t size)
     }
 
     //No fit found, Get more memory and place the block
-    extendsize = MAX(asize, 4096);
-    if((ptr = extend_heap(extendsize)) == NULL){
+    extendsize = MAX(asize, CHUNKSIZE);
+    if((ptr = extend_heap(extendsize*(15))) == NULL){
         return NULL;
     }
     place(ptr, asize);
