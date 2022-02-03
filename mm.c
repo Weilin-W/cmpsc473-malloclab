@@ -70,8 +70,8 @@ static void place(void *ptr, size_t asize);
 /*
  * Basic constants and static function for manipulating the free list.
  */
-#define WSIZE  4 //Word and header/footer size
-#define DSIZE  8 //Double word size
+#define WSIZE  8 //Word and header/footer size
+#define DSIZE  16 //Double word size
 #define CHUNKSIZE (1<<12) //Extend heap by this amount
 
 int MAX(int x, int y){
@@ -87,10 +87,10 @@ static uint64_t PACK(size_t size, bool alloc){
     return ((size) | (alloc));
 }
 //Read and write a word at address p
-static uint32_t GET(void* p){
+static uint64_t GET(void* p){
     return (*(unsigned int* )(p));
 }
-static void PUT(void* p, uint32_t val){
+static void PUT(void* p, uint64_t val){
     (*(unsigned int* )(p) = (val));
 }
 //Read the size and allocated fields from address p
@@ -122,7 +122,7 @@ static void *extend_heap(size_t words){
 
     char *ptr;
     size_t size;
-
+    
     //Allocate an even number of words to maintain alignment
     //size = (words % 2) ? (words + 1) * WSIZE : words *WSIZE;
     if(words % 2 == 0){
@@ -252,7 +252,7 @@ void* malloc(size_t size)
     if(size <= DSIZE){
         asize = 2*DSIZE;
     }else{
-        asize = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE);
+        asize = align(size);
     }
     //Search the free list for a fit
     if((ptr = find_fit(asize)) != NULL){
