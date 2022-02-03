@@ -95,7 +95,7 @@ static void PUT(void* p, uint64_t val){
 }
 //Read the size and allocated fields from address p
 static uint64_t GET_SIZE(void* p){
-    return (GET(p) & !0x7);
+    return (GET(p) & ~0x7);
 }
 static bool GET_ALLOC(void* p){
     return (GET(p) & 0x1);
@@ -217,7 +217,7 @@ bool mm_init(void)
 {
     // IMPLEMENT THIS
     //Create the initial empty heap
-    if ((heap_listp = mem_sbrk(4*WSIZE)) == (void*)-1){
+    if ((heap_listp = mem_sbrk(4*WSIZE)) == NULL){
         return false;
     }
     PUT(heap_listp, 0); //Alignment padding
@@ -227,7 +227,7 @@ bool mm_init(void)
     heap_listp += (2*WSIZE);
 
     //Extend the empty heap with a free block of CHUNKSIZE bytes
-    if(extend_heap(CHUNKSIZE/WSIZE) == NULL){
+    if(extend_heap(4096) == NULL){
         return false;
     }
     return true;
@@ -252,7 +252,7 @@ void* malloc(size_t size)
     if(size <= DSIZE){
         asize = 2*DSIZE;
     }else{
-        asize = align(size);
+        asize = align(size + 16);
     }
     //Search the free list for a fit
     if((ptr = find_fit(asize)) != NULL){
@@ -261,8 +261,8 @@ void* malloc(size_t size)
     }
 
     //No fit found, Get more memory and place the block
-    extendsize = MAX(asize, CHUNKSIZE);
-    if((ptr = extend_heap(extendsize/WSIZE)) == NULL){
+    extendsize = MAX(asize, 4096);
+    if((ptr = extend_heap(extendsize)) == NULL){
         return NULL;
     }
     place(ptr, asize);
