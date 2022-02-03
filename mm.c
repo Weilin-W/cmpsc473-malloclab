@@ -72,9 +72,9 @@ static void place(void *ptr, size_t asize);
  */
 #define WSIZE  8 //Word and header/footer size
 #define DSIZE  16 //Double word size
-#define CHUNKSIZE (1<<12) //Extend heap by this amount
+//#define CHUNKSIZE (1<<12) //Extend heap by this amount
 
-int MAX(int x, int y){
+static size_t MAX(size_t x, size_t y){
     if(x > y){
         return x;
     }else{
@@ -83,35 +83,35 @@ int MAX(int x, int y){
 }
 
 //Pack a size and allocated bit into a word
-static uint64_t PACK(size_t size, bool alloc){
+static size_t PACK(size_t size, size_t alloc){
     return ((size) | (alloc));
 }
 //Read and write a word at address p
 static uint64_t GET(void* p){
     return (*(uint64_t* )(p));
 }
-static void PUT(void* p, uint64_t val){
+static void PUT(void* p, size_t val){
     (*(uint64_t* )(p) = (val));
 }
 //Read the size and allocated fields from address p
 static uint64_t GET_SIZE(void* p){
-    return (GET(p) & ~0x7);
+    return (GET(p) & ~(0xf));
 }
-static bool GET_ALLOC(void* p){
+static uint64_t GET_ALLOC(void* p){
     return (GET(p) & 0x1);
 }
 //Given block ptr ptr, compute address of its header and footer
-static char* HDRP(void* ptr){
-    return ((char *)(ptr)-WSIZE);
+static void* HDRP(void* ptr){
+    return ((char *)(ptr) - WSIZE);
 }
 static char* FTRP(void* ptr){
     return ((char *)(ptr) + GET_SIZE(HDRP(ptr)) - DSIZE);
 }
 //Given block ptr ptr, compute address of next and previous blocks
-static char* NEXT_BLKP(void* ptr){
+static void* NEXT_BLKP(void* ptr){
     return ((char *)(ptr) + GET_SIZE(((char *)(ptr) - WSIZE)));
 }
-static char* PREV_BLKP(void* ptr){
+static void* PREV_BLKP(void* ptr){
     return ((char *)(ptr) - GET_SIZE(((char *)(ptr) - DSIZE)));
 }
 
