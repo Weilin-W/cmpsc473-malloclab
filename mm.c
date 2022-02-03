@@ -53,6 +53,9 @@ static size_t align(size_t x)
 {
     return ALIGNMENT * ((x+ALIGNMENT-1)/ALIGNMENT);
 }
+/*
+ *-------All from textbook reference-------
+ */
 
 /* 
  *Global Variables
