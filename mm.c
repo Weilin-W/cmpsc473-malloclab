@@ -75,7 +75,7 @@ static void place(void *ptr, size_t asize);
  */
 #define WSIZE  8 //Word and header/footer size
 #define DSIZE  16 //Double word size
-#define CHUNKSIZE (1<<12) //Extend heap by this amount
+#define CHUNKSIZE (1<<12) //Extend heap by this amount 4096
 
 static size_t MAX(size_t x, size_t y){
     if(x > y){
@@ -230,7 +230,7 @@ bool mm_init(void)
     heap_listp += (2*WSIZE);
 
     //Extend the empty heap with a free block of CHUNKSIZE bytes
-    if(extend_heap(CHUNKSIZE*(128)) == NULL){
+    if(extend_heap(CHUNKSIZE/WSIZE) == NULL){
         return false;
     }
     return true;
@@ -255,7 +255,7 @@ void* malloc(size_t size)
     if(size <= DSIZE){
         asize = 2*DSIZE;
     }else{
-        asize = align(size + 16);
+        asize = align(size) + 16;
     }
     //Search the free list for a fit
     if((ptr = find_fit(asize)) != NULL){
@@ -265,7 +265,7 @@ void* malloc(size_t size)
 
     //No fit found, Get more memory and place the block
     extendsize = MAX(asize, CHUNKSIZE);
-    if((ptr = extend_heap(extendsize*(128))) == NULL){
+    if((ptr = extend_heap(extendsize/WSIZE)) == NULL){
         return NULL;
     }
     place(ptr, asize);
@@ -284,9 +284,6 @@ void free(void* ptr)
     //free block, write implementation add back to free list.
     //Change allocation....etc
     size_t size = GET_SIZE(HDRP(ptr));
-    if(heap_listp == NULL){
-        mm_init();
-    }
     PUT(HDRP(ptr), PACK(size, 0));
     PUT(FTRP(ptr), PACK(size, 0));
     coalesce(ptr);
