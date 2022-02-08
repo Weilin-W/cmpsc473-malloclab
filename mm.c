@@ -123,16 +123,18 @@ static void* PREV_BLKP(void* ptr){
  */
 static void *extend_heap(size_t words){
 
-    char *ptr;
+    size_t *ptr;
     size_t size;
     
     //Allocate an even number of words to maintain alignment
     //size = (words % 2) ? (words + 1) * WSIZE : words *WSIZE;
+    /*
     if(words % 2 == 0){
         size = (words + 1) * WSIZE;
     }else{
         size = words * WSIZE;
-    }
+    }*/
+    size = align(words);
     if((long)(ptr = mem_sbrk(size)) == -1){
         return(NULL);
     }
@@ -230,7 +232,7 @@ bool mm_init(void)
     heap_listp += (2*WSIZE);
 
     //Extend the empty heap with a free block of CHUNKSIZE bytes
-    if(extend_heap(CHUNKSIZE/WSIZE) == NULL){
+    if(extend_heap(CHUNKSIZE) == NULL){
         return false;
     }
     return true;
@@ -255,7 +257,8 @@ void* malloc(size_t size)
     if(size <= DSIZE){
         asize = 2*DSIZE;
     }else{
-        asize = align(size) + 16;
+        //asize = align(size) + 16;
+        asize = align(size + 16);
     }
     //Search the free list for a fit
     if((ptr = find_fit(asize)) != NULL){
@@ -265,7 +268,8 @@ void* malloc(size_t size)
 
     //No fit found, Get more memory and place the block
     extendsize = MAX(asize, CHUNKSIZE);
-    if((ptr = extend_heap(extendsize/WSIZE)) == NULL){
+    //Need to fix: Check if asize and chunksize align to 16 bytes** Run GDB
+    if((ptr = extend_heap(extendsize)) == NULL){
         return NULL;
     }
     place(ptr, asize);
