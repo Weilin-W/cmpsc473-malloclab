@@ -209,7 +209,7 @@ static void *coalesce(void* ptr){
     }
 
     //insert to empty list
-    insertNode(ptr, size)
+    insertNode(ptr, size);
 
     return (ptr); //return block pointer
 }
@@ -342,6 +342,10 @@ static void deleteNode(void *ptr){
 bool mm_init(void)
 {
     // IMPLEMENT THIS
+    //Initialize segfree list
+    for(int listpos = 0; listpos < totalTrace; listpos++){
+        segfree_list[listpos] = NULL;
+    }
     //Create the initial empty heap
     if ((heap_listp = mem_sbrk(4*WSIZE)) == NULL){
         return false;
@@ -369,7 +373,8 @@ void* malloc(size_t size)
     size_t asize; // Adjusted block size
     size_t extendsize; //Amount to extend heap if no fit
     char *ptr;
-
+    int listpos = 0;
+    size_t ssize = size;
     //Ignore requests if empty
     if(size == 0){
         return NULL;
@@ -387,9 +392,22 @@ void* malloc(size_t size)
         return ptr;
     }
 
+    while(listpos < totalTrace){
+        //find the list
+        if(((segfree_list[listpos] != NULL) && (size <= 1))){
+            ptr = segfree_list[listpos];
+            //find free block in the list
+            while((ptr != NULL) && ((size > GET_SIZE(HDRP(ptr))))){
+                ptr = PREV(ptr);
+            }
+        }
+        ssize >>= 1;
+        listpos += 1;
+    }
+
     //No fit found, Get more memory and place the block
     extendsize = MAX(asize, CHUNKSIZE);
-    //Need to fix: Check if asize and chunksize align to 16 bytes** Run GDB
+    //Extend_heap by extendsize
     if((ptr = extend_heap(extendsize)) == NULL){
         return NULL;
     }
@@ -411,6 +429,7 @@ void free(void* ptr)
     size_t size = GET_SIZE(HDRP(ptr));
     PUT(HDRP(ptr), PACK(size, 0));
     PUT(FTRP(ptr), PACK(size, 0));
+    insertNode(ptr, size);
     coalesce(ptr);
     
 }
