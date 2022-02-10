@@ -182,12 +182,16 @@ static void *coalesce(void* ptr){
     }
     //Case 2
     else if(prev_alloc && !next_alloc){
+        deleteNode(ptr);
+        deleteNode(NEXT_BLKP(ptr));
         size += GET_SIZE(HDRP(NEXT_BLKP(ptr))); //Increase size to next block header size
         PUT(HDRP(ptr), PACK(size, 0)); //Free Header
         PUT(FTRP(ptr), PACK(size, 0)); //Free Footer
     }
     //Case 3
     else if(!prev_alloc && next_alloc){
+        deleteNode(ptr);
+        deleteNode(PREV_BLKP(ptr));
         size += GET_SIZE(HDRP(PREV_BLKP(ptr))); //Increase size to previous block header size
         PUT(FTRP(ptr), PACK(size, 0)); //Free Footer
         PUT(HDRP(PREV_BLKP(ptr)), PACK(size, 0)); //Free previous header
@@ -195,11 +199,18 @@ static void *coalesce(void* ptr){
     }
     //Case 4
     else{
+        deleteNode(ptr);
+        deleteNode(PREV_BLKP(ptr));
+        deleteNode(NEXT_BLKP(ptr));
         size += GET_SIZE(HDRP(PREV_BLKP(ptr))) + GET_SIZE(FTRP(NEXT_BLKP(ptr))); //Increase size to sum of previous block header size and next block footer size
         PUT(HDRP(PREV_BLKP(ptr)), PACK(size, 0)); //Free previous block header
         PUT(FTRP(NEXT_BLKP(ptr)), PACK(size, 0)); //Free next block footer
         ptr = PREV_BLKP(ptr); //Set block pointer to previous block pointer
     }
+
+    //insert to empty list
+    insertNode(ptr, size)
+
     return (ptr); //return block pointer
 }
 /*
@@ -222,13 +233,14 @@ static void *find_fit(size_t asize){
  */
 static void place(void *ptr, size_t asize){
     size_t csize = GET_SIZE(HDRP(ptr));
-
+    deleteNode(ptr);
     if((csize - asize) >= (2*DSIZE)){
         PUT(HDRP(ptr), PACK(asize, 1));
         PUT(FTRP(ptr), PACK(asize, 1));
         ptr = NEXT_BLKP(ptr);
         PUT(HDRP(ptr), PACK(csize - asize, 0));
         PUT(FTRP(ptr), PACK(csize - asize, 0));
+        insertNode(ptr, csize - asize);
     }else{
         PUT(HDRP(ptr), PACK(csize, 1));
         PUT(FTRP(ptr), PACK(csize, 1));
