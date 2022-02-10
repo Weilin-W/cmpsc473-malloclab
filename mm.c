@@ -65,7 +65,7 @@ static char *heap_listp; //Ptr to first block
 /*
  * Segregation free lists
  */
-#define totalTrace 15
+#define totalTrace 16
 void *segfree_list[totalTrace];
 
 /*
@@ -74,7 +74,7 @@ void *segfree_list[totalTrace];
 static void *coalesce(void* ptr);
 static void *extend_heap(size_t words);
 static void *find_fit(size_t asize);
-static void place(void *ptr, size_t asize);
+static void *place(void *ptr, size_t asize);
 static void insertNode(void *ptr, size_t asize);
 static void deleteNode(void *ptr);
 
@@ -216,22 +216,34 @@ static void *coalesce(void* ptr){
 /*
  * Find fit function
  */
-static void *find_fit(size_t asize){
-    //First fit search
-    void *ptr;
 
-    for(ptr = heap_listp; GET_SIZE(HDRP(ptr)) > 0; ptr = NEXT_BLKP(ptr)){
-        if(!GET_ALLOC(HDRP(ptr)) && (asize <= GET_SIZE(HDRP(ptr)))){
-            return ptr;
+static void *find_fit(size_t asize){
+    int listpos = 0;
+    size_t ssize = asize;
+    void *ptr;
+    while(listpos < totalTrace){
+        //find the list
+        if(((segfree_list[listpos] != NULL) && (ssize <= 1))){
+            ptr = segfree_list[listpos];
+            //find free block in the list
+            while((ptr != NULL) && ((asize > GET_SIZE(HDRP(ptr))))){
+                ptr = PREV(ptr);
+            }
+            //prevent uninitialized ptr
+            if(ptr != NULL){
+                break;
+            }
         }
+        ssize >>= 1;
+        listpos += 1;
     }
-    return NULL; //No fit
+    return ptr;
 }
 
 /*
  * Place function
  */
-static void place(void *ptr, size_t asize){
+static void *place(void *ptr, size_t asize){
     size_t csize = GET_SIZE(HDRP(ptr));
     deleteNode(ptr);
     if((csize - asize) >= (2*DSIZE)){
@@ -245,6 +257,7 @@ static void place(void *ptr, size_t asize){
         PUT(HDRP(ptr), PACK(csize, 1));
         PUT(FTRP(ptr), PACK(csize, 1));
     }
+    return(ptr);
 }
 
 /*
@@ -373,8 +386,6 @@ void* malloc(size_t size)
     size_t asize; // Adjusted block size
     size_t extendsize; //Amount to extend heap if no fit
     char *ptr;
-    int listpos = 0;
-    size_t ssize = size;
     //Ignore requests if empty
     if(size == 0){
         return NULL;
@@ -390,19 +401,6 @@ void* malloc(size_t size)
     if((ptr = find_fit(asize)) != NULL){
         place(ptr, asize);
         return ptr;
-    }
-
-    while(listpos < totalTrace){
-        //find the list
-        if(((segfree_list[listpos] != NULL) && (size <= 1))){
-            ptr = segfree_list[listpos];
-            //find free block in the list
-            while((ptr != NULL) && ((size > GET_SIZE(HDRP(ptr))))){
-                ptr = PREV(ptr);
-            }
-        }
-        ssize >>= 1;
-        listpos += 1;
     }
 
     //No fit found, Get more memory and place the block
