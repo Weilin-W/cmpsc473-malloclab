@@ -384,7 +384,7 @@ void* malloc(size_t size)
         asize = 2*DSIZE;
     }else{
         //asize = align(size) + 16;
-        asize = align(size + 16);
+        asize = align(size + DSIZE);
     }
     //Search the free list for a fit
     if((ptr = find_fit(asize)) != NULL){
