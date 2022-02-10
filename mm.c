@@ -65,7 +65,7 @@ static char *heap_listp; //Ptr to first block
 /*
  * Segregation free lists
  */
-#define totalTrace 23
+#define totalTrace 15
 void *segfree_list[totalTrace];
 
 /*
@@ -137,6 +137,10 @@ static void* PREV(void* ptr){
 }
 static void* NEXT(void* ptr){
     return (*(char **)(NEXT_PTR(ptr)));
+}
+//Set Pointer
+static void SET(void* p, void* ptr){
+    (*(uint64_t* )(p) = (uint64_t)(ptr));
 }
 
 /*
@@ -258,28 +262,28 @@ static void insertNode(void *ptr, size_t asize){
     if(sptr != NULL){
         //insert in the front
         if(iptr == NULL){
-            PUT(PREV_PTR(ptr), sptr);
-            PUT(NEXT_PTR(sptr), ptr);
-            PUT(NEXT_PTR(ptr), NULL);
+            SET(PREV_PTR(ptr), sptr);
+            SET(NEXT_PTR(sptr), ptr);
+            SET(NEXT_PTR(ptr), NULL);
             segfree_list[listpos] = ptr;
         }else{
             //insert in the middle
-            PUT(PREV_PTR(ptr), sptr);
-            PUT(NEXT_PTR(sptr), ptr);
-            PUT(NEXT_PTR(ptr), iptr);
-            PUT(PREV_PTR(iptr), ptr);
+            SET(PREV_PTR(ptr), sptr);
+            SET(NEXT_PTR(sptr), ptr);
+            SET(NEXT_PTR(ptr), iptr);
+            SET(PREV_PTR(iptr), ptr);
         }   
     }else{
         //empty insert
         if(iptr == NULL){
-            PUT(PREV_PTR(ptr), NULL);
-            PUT(NEXT_PTR(ptr), NULL);
+            SET(PREV_PTR(ptr), NULL);
+            SET(NEXT_PTR(ptr), NULL);
             segfree_list[listpos] = ptr;
         }else{
         //insert in the back
-        PUT(PREV_PTR(ptr), NULL);
-        PUT(NEXT_PTR(ptr), iptr);
-        PUT(PREV_PTR(iptr), ptr);
+        SET(PREV_PTR(ptr), NULL);
+        SET(NEXT_PTR(ptr), iptr);
+        SET(PREV_PTR(iptr), ptr);
         }
     }
 }
@@ -302,12 +306,12 @@ static void deleteNode(void *ptr){
     if(PREV(ptr) != NULL){
         if(NEXT(ptr) == NULL){
             //delete from the front
-            PUT(NEXT_PTR(PREV(ptr)), NULL);
+            SET(NEXT_PTR(PREV(ptr)), NULL);
             segfree_list[listpos] = PREV(ptr);
         }else{
             //delete from the middle
-            PUT(NEXT_PTR(PREV(ptr)), NEXT(ptr));
-            PUT(PREV_PTR(NEXT(ptr)), PREV(ptr));
+            SET(NEXT_PTR(PREV(ptr)), NEXT(ptr));
+            SET(PREV_PTR(NEXT(ptr)), PREV(ptr));
         }
     }else{
         if(NEXT(ptr) == NULL){
@@ -315,7 +319,7 @@ static void deleteNode(void *ptr){
             segfree_list[listpos] = NULL;
         }else{
             //delete from the back
-            PUT(PREV_PTR(NEXT(ptr)), NULL);
+            SET(PREV_PTR(NEXT(ptr)), NULL);
         }
     }
 }
