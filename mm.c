@@ -63,12 +63,20 @@ static size_t align(size_t x)
 static char *heap_listp; //Ptr to first block
 
 /*
+ * Segregation free lists
+ */
+#define totalTrace 23
+void *segfree_list[totalTrace];
+
+/*
  * Functions Declare
  */
 static void *coalesce(void* ptr);
 static void *extend_heap(size_t words);
 static void *find_fit(size_t asize);
 static void place(void *ptr, size_t asize);
+static void insertNode(void *ptr, size_t asize);
+static void deleteNode(void *ptr);
 
 /*
  * Basic constants and static function for manipulating the free list.
@@ -117,6 +125,19 @@ static void* NEXT_BLKP(void* ptr){
 static void* PREV_BLKP(void* ptr){
     return ((char *)(ptr) - GET_SIZE(((char *)(ptr) - DSIZE)));
 }
+//Given block ptr, compute the previous pointer and next pointer
+static void* PREV_PTR(void* ptr){
+    return (char *)(ptr);
+}
+static void* NEXT_PTR(void* ptr){
+    return ((char *)(ptr) + WSIZE);
+}
+static void* PREV(void* ptr){
+    return (*(char **)(ptr));
+}
+static void* NEXT(void* ptr){
+    return (*(char **)(NEXT_PTR(ptr)));
+}
 
 /*
  * Extends the heap with a new free block
@@ -126,14 +147,7 @@ static void *extend_heap(size_t words){
     size_t *ptr;
     size_t size;
     
-    //Allocate an even number of words to maintain alignment
-    //size = (words % 2) ? (words + 1) * WSIZE : words *WSIZE;
-    /*
-    if(words % 2 == 0){
-        size = (words + 1) * WSIZE;
-    }else{
-        size = words * WSIZE;
-    }*/
+    //Allocate size to words size
     size = align(words);
     if((long)(ptr = mem_sbrk(size)) == -1){
         return(NULL);
@@ -142,6 +156,9 @@ static void *extend_heap(size_t words){
     PUT(HDRP(ptr), PACK(size, 0));  //Free block header
     PUT(FTRP(ptr), PACK(size, 0));  //Free block footer
     PUT(HDRP(NEXT_BLKP(ptr)), PACK(0, 1));  //New epilogue header
+
+    //insertion of node into seg-free list
+    insertNode(ptr, size);
 
     //Coalesce if the previous block was free
     return coalesce(ptr);
@@ -214,6 +231,94 @@ static void place(void *ptr, size_t asize){
     }
 }
 
+/*
+ * Insertion of node to seg-free list
+ */
+static void insertNode(void *ptr, size_t asize){
+    //Declare list position, search thru list pointer, and insert thru list pointer
+    int listpos = 0;
+    void *sptr = NULL;
+    void *iptr = NULL;
+
+    //Find list position
+    while ((asize > 1) && (listpos < totalTrace - 1)){
+        //asize shift 1 to right and increase list position
+        asize >>= 1;
+        listpos += 1;
+
+    }
+
+    //Find position to insert
+    sptr = segfree_list[listpos];
+    while((sptr != NULL) && (asize > GET_SIZE(HDRP(sptr)))){
+        iptr = sptr;
+        sptr = PREV(sptr);
+    }
+    //Within search: 4 cases
+    if(sptr != NULL){
+        //insert in the front
+        if(iptr == NULL){
+            PUT(PREV_PTR(ptr), sptr);
+            PUT(NEXT_PTR(sptr), ptr);
+            PUT(NEXT_PTR(ptr), NULL);
+            segfree_list[listpos] = ptr;
+        }else{
+            //insert in the middle
+            PUT(PREV_PTR(ptr), sptr);
+            PUT(NEXT_PTR(sptr), ptr);
+            PUT(NEXT_PTR(ptr), iptr);
+            PUT(PREV_PTR(iptr), ptr);
+        }   
+    }else{
+        //empty insert
+        if(iptr == NULL){
+            PUT(PREV_PTR(ptr), NULL);
+            PUT(NEXT_PTR(ptr), NULL);
+            segfree_list[listpos] = ptr;
+        }else{
+        //insert in the back
+        PUT(PREV_PTR(ptr), NULL);
+        PUT(NEXT_PTR(ptr), iptr);
+        PUT(PREV_PTR(iptr), ptr);
+        }
+    }
+}
+
+/*
+ * Deletion of node to seg-free list
+ */
+static void deleteNode(void *ptr){
+    int listpos = 0;
+    size_t asize = GET_SIZE(HDRP(ptr));
+
+    //Find list position
+    while ((asize > 1) && (listpos < totalTrace - 1)){
+        //asize shift 1 to right and increase list position
+        asize >>= 1;
+        listpos += 1;
+    }
+
+    //After found, 4 cases:
+    if(PREV(ptr) != NULL){
+        if(NEXT(ptr) == NULL){
+            //delete from the front
+            PUT(NEXT_PTR(PREV(ptr)), NULL);
+            segfree_list[listpos] = PREV(ptr);
+        }else{
+            //delete from the middle
+            PUT(NEXT_PTR(PREV(ptr)), NEXT(ptr));
+            PUT(PREV_PTR(NEXT(ptr)), PREV(ptr));
+        }
+    }else{
+        if(NEXT(ptr) == NULL){
+            //delete ssempty
+            segfree_list[listpos] = NULL;
+        }else{
+            //delete from the back
+            PUT(PREV_PTR(NEXT(ptr)), NULL);
+        }
+    }
+}
 
 /*
  * mm_init: returns false on error, true on success.
