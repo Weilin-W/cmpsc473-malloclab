@@ -253,13 +253,6 @@ static void *place(void *ptr, size_t asize){
         PUT(HDRP(ptr), PACK(csize - asize, 0));
         PUT(FTRP(ptr), PACK(csize - asize, 0));
         insertNode(ptr, csize - asize);
-    }else if(asize >= 192){
-        PUT(HDRP(ptr), PACK(csize - asize, 0));
-        PUT(FTRP(ptr), PACK(csize - asize, 0));
-        PUT(HDRP(NEXT_BLKP(ptr)), PACK(asize, 1));
-        PUT(FTRP(NEXT_BLKP(ptr)), PACK(asize, 1));
-        insertNode(ptr, csize - asize);
-        return NEXT_BLKP(ptr);
     }else{
         PUT(HDRP(ptr), PACK(csize, 1));
         PUT(FTRP(ptr), PACK(csize, 1));
@@ -514,6 +507,29 @@ bool mm_checkheap(int lineno)
 #ifdef DEBUG
     // Write code to check heap invariants here
     // IMPLEMENT THIS
+    //Check if the pointer is exist in the heap
+    if(in_heap(heap_listp) == true){
+        printf("Pointer exist in the heap!");
+    }else{
+        printf("ERROR: Pointer not in the heap!");
+    }
+    //check if theres room for free blocks in the list
+    for(int listpos = 0; listpos < totalTrace; listpos++){
+        for(void* j = heap_listp; segfree_list[listpos] != NULL; j = HDRP(NEXT_BLKP(heap_listp))){
+            if(segfree_list[listpos] == NULL){
+                printf("Found Space in segfree_list at position: %d", listpos);
+            }else{
+                //Free block exist in the free list
+                if(GET_ALLOC(HDRP(j)) == NULL){
+                    printf("The free block at %ld is in the free list!", HDRP(heap_listp));
+                }
+            }
+        }
+        //check every block in the free list
+        if(GET_ALLOC(HDRP(heap_listp)) == NULL){
+            printf("The block at %ld is marked as free!", HDRP(heap_listp));
+        }
+    }
 #endif // DEBUG
     return true;
 }
