@@ -172,7 +172,7 @@ static void *extend_heap(size_t words){
   * coalesce pointer function
   */
 static void *coalesce(void* ptr){
-    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(ptr)));
+    size_t prev_alloc = GET_ALLOC(HDRP(PREV_BLKP(ptr)));
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
     size_t size = GET_SIZE(HDRP(ptr));
 
@@ -253,6 +253,13 @@ static void *place(void *ptr, size_t asize){
         PUT(HDRP(ptr), PACK(csize - asize, 0));
         PUT(FTRP(ptr), PACK(csize - asize, 0));
         insertNode(ptr, csize - asize);
+    }else if(asize >= 192){
+        PUT(HDRP(ptr), PACK(csize - asize, 0));
+        PUT(FTRP(ptr), PACK(csize - asize, 0));
+        PUT(HDRP(NEXT_BLKP(ptr)), PACK(asize, 1));
+        PUT(FTRP(NEXT_BLKP(ptr)), PACK(asize, 1));
+        insertNode(ptr, csize - asize);
+        return NEXT_BLKP(ptr);
     }else{
         PUT(HDRP(ptr), PACK(csize, 1));
         PUT(FTRP(ptr), PACK(csize, 1));
