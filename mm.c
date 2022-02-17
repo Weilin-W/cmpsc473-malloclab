@@ -23,7 +23,7 @@
  * uncomment the following line. Be sure not to have debugging enabled
  * in your final submission.
  */
-// #define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 // When debugging is enabled, the underlying functions get called
@@ -355,6 +355,7 @@ static void deleteNode(void *ptr){
 bool mm_init(void)
 {
     // IMPLEMENT THIS
+    mm_checkheap(__LINE__);
     //Initialize segfree list
     for(int listpos = 0; listpos < totalTrace; listpos++){
         segfree_list[listpos] = NULL;
@@ -382,6 +383,7 @@ bool mm_init(void)
 void* malloc(size_t size)
 {
     // IMPLEMENT THIS
+    mm_checkheap(__LINE__);
     // Find space, free size of heap, multiple heap block, allocate, find free block, use, else create new block
     size_t asize; // Adjusted block size
     size_t extendsize; //Amount to extend heap if no fit
@@ -419,6 +421,7 @@ void* malloc(size_t size)
 void free(void* ptr)
 {
     // IMPLEMENT THIS
+    mm_checkheap(__LINE__);
     if(ptr == NULL){
         return;
     }
@@ -438,6 +441,7 @@ void free(void* ptr)
 void* realloc(void* oldptr, size_t size)
 {
     // IMPLEMENT THIS
+    mm_checkheap(__LINE__);
     size_t oldsize;
     void* newptr;
     // Check if oldptr equals NUll, if it does, then put size into mm_malloc
@@ -507,27 +511,25 @@ bool mm_checkheap(int lineno)
 #ifdef DEBUG
     // Write code to check heap invariants here
     // IMPLEMENT THIS
+    int listpos = 0;
+    //Find list position
+    while ((listpos < totalTrace - 1)){
+        //increase list position
+        listpos += 1;
+    }
     //Check if the pointer is exist in the heap
     if(in_heap(heap_listp) == true){
-        printf("Pointer exist in the heap!");
+        printf("Pointer %p exist in the heap!\n", heap_listp);
     }else{
-        printf("ERROR: Pointer not in the heap!");
+        printf("ERROR: Pointer %p not in the heap!\n", heap_listp);
     }
     //check if theres room for free blocks in the list
-    for(int listpos = 0; listpos < totalTrace; listpos++){
-        for(void* j = heap_listp; segfree_list[listpos] != NULL; j = HDRP(NEXT_BLKP(heap_listp))){
-            if(segfree_list[listpos] == NULL){
-                printf("Found Space in segfree_list at position: %d", listpos);
-            }else{
-                //Free block exist in the free list
-                if(GET_ALLOC(HDRP(j)) == NULL){
-                    printf("The free block at %ld is in the free list!", HDRP(heap_listp));
-                }
-            }
-        }
-        //check every block in the free list
-        if(GET_ALLOC(HDRP(heap_listp)) == NULL){
-            printf("The block at %ld is marked as free!", HDRP(heap_listp));
+    if(segfree_list[listpos] == NULL){
+        printf("Found Space in segfree_list at position: %d\n", listpos);
+    }else{
+        //Free block exist in the free list
+        if(!GET_ALLOC(HDRP(heap_listp))){
+            printf("The free block at %p is in the free list!\n", HDRP(heap_listp));
         }
     }
 #endif // DEBUG
