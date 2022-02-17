@@ -176,11 +176,11 @@ static void *coalesce(void* ptr){
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
     size_t size = GET_SIZE(HDRP(ptr));
 
-    //Case 1
+    //Case 1: Checks when prev block and next block allocated
     if(prev_alloc && next_alloc){
         return ptr; //block pointer
     }
-    //Case 2
+    //Case 2: Checks when prev block allocated, but next block not allocated
     else if(prev_alloc && !next_alloc){
         deleteNode(ptr);
         deleteNode(NEXT_BLKP(ptr));
@@ -188,7 +188,7 @@ static void *coalesce(void* ptr){
         PUT(HDRP(ptr), PACK(size, 0)); //Free Header
         PUT(FTRP(ptr), PACK(size, 0)); //Free Footer
     }
-    //Case 3
+    //Case 3: Checks when prev block not allocated, but next block allocated
     else if(!prev_alloc && next_alloc){
         deleteNode(ptr);
         deleteNode(PREV_BLKP(ptr));
@@ -197,7 +197,7 @@ static void *coalesce(void* ptr){
         PUT(HDRP(PREV_BLKP(ptr)), PACK(size, 0)); //Free previous header
         ptr = PREV_BLKP(ptr);
     }
-    //Case 4
+    //Case 4: Checks when both prev and next block not allocated
     else{
         deleteNode(ptr);
         deleteNode(PREV_BLKP(ptr));
@@ -229,11 +229,12 @@ static void *find_fit(size_t asize){
             while((ptr != NULL) && ((asize > GET_SIZE(HDRP(ptr))))){
                 ptr = PREV(ptr);
             }
-            //prevent uninitialized ptr
+            //prevent uninitialized ptr, stop when the ptr has the value
             if(ptr != NULL){
                 break;
             }
         }
+        //shifts the search size to the right 1 and increment the position in the list by 1
         ssize >>= 1;
         listpos += 1;
     }
@@ -244,14 +245,18 @@ static void *find_fit(size_t asize){
  * Place function
  */
 static void *place(void *ptr, size_t asize){
+    //retrieve the head size of the ptr
     size_t csize = GET_SIZE(HDRP(ptr));
+    //remove the ptr reference from the segfree_list
     deleteNode(ptr);
+    //check if the overall size greater than 32 bytes
     if((csize - asize) >= (2*DSIZE)){
         PUT(HDRP(ptr), PACK(asize, 1));
         PUT(FTRP(ptr), PACK(asize, 1));
         ptr = NEXT_BLKP(ptr);
         PUT(HDRP(ptr), PACK(csize - asize, 0));
         PUT(FTRP(ptr), PACK(csize - asize, 0));
+        //make insertion step into the segfree_list
         insertNode(ptr, csize - asize);
     }else{
         PUT(HDRP(ptr), PACK(csize, 1));
@@ -340,7 +345,7 @@ static void deleteNode(void *ptr){
         }
     }else{
         if(NEXT(ptr) == NULL){
-            //delete ssempty
+            //delete on an empty free list
             segfree_list[listpos] = NULL;
         }else{
             //delete from the back
@@ -396,7 +401,7 @@ void* malloc(size_t size)
     if(size <= DSIZE){
         asize = 2*DSIZE;
     }else{
-        //asize = align(size) + 16;
+        //align the allocated size to 16 bytes
         asize = align(size + DSIZE);
     }
     //Search the free list for a fit
@@ -430,6 +435,7 @@ void free(void* ptr)
     size_t size = GET_SIZE(HDRP(ptr));
     PUT(HDRP(ptr), PACK(size, 0));
     PUT(FTRP(ptr), PACK(size, 0));
+    //Insert the into the segfree_list based off the ptr and size
     insertNode(ptr, size);
     coalesce(ptr);
     
@@ -444,11 +450,11 @@ void* realloc(void* oldptr, size_t size)
     mm_checkheap(__LINE__);
     size_t oldsize;
     void* newptr;
-    // Check if oldptr equals NUll, if it does, then put size into mm_malloc
+    // Check if oldptr is empty, then if it does, we just recurrsively calls malloc function
     if(oldptr == NULL){
         return malloc(size);
     }
-    //Check size equals 0
+    //Check if size has any value, if it doesn't then it would just deallocates the oldptr passed into the realloc function
     if(size == 0){
         free(oldptr);
         return NULL;
@@ -458,7 +464,7 @@ void* realloc(void* oldptr, size_t size)
     if(newptr == NULL){
         return NULL;
     }else{
-        //Get oldptr size, copy over oldptr size to newly created size ptr, free the oldptr
+        //Get oldptr size, copy over oldptr size to newly created size ptr, deallocates the oldptr
         oldsize = GET_SIZE(HDRP(oldptr));
         if(oldsize > size){
             oldsize = size;
@@ -531,6 +537,10 @@ bool mm_checkheap(int lineno)
         if(!GET_ALLOC(HDRP(heap_listp))){
             dbg_printf("The free block at %p is in the free list!\n", HDRP(heap_listp));
         }
+        //check if the header size match with the footer size
+        if(GET_SIZE(HDRP(heap_listp)) != GET_SIZE(FTRP(heap_listp))){
+            dbg_print("Header size doesn't equal to the footer size\n");
+    }
     }
 #endif // DEBUG
     return true;
