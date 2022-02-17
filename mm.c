@@ -522,14 +522,16 @@ bool mm_checkheap(int lineno)
     // Write code to check heap invariants here
     // IMPLEMENT THIS
     int listpos = 0;
+
     //Find list position
-    while ((listpos < totalTrace - 1)){
-        //increase list position
+    while (segfree_list[listpos] == NULL && (listpos < totalTrace - 1)){
+        //asize shift 1 to right and increase list position
         listpos += 1;
     }
     //Check if the pointer is exist in the heap
     if(in_heap(heap_listp) == true){
         dbg_printf("Pointer %p exist in the heap!\n", heap_listp);
+        heap_listp = NEXT_BLKP(heap_listp);
     }else{
         dbg_printf("ERROR: Pointer %p not in the heap!\n", heap_listp);
     }
@@ -543,7 +545,8 @@ bool mm_checkheap(int lineno)
         }
         //check if the header size match with the footer size
         if(GET_SIZE(HDRP(heap_listp)) != GET_SIZE(FTRP(heap_listp))){
-            dbg_printf("Header size doesn't equal to the footer size\n");
+            dbg_printf("Pointer: %p Header size doesn't equal to the footer size\n", HDRP(heap_listp));
+            heap_listp = NEXT_BLKP(heap_listp);
         }
     }
 #endif // DEBUG
