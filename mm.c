@@ -519,17 +519,17 @@ bool mm_checkheap(int lineno)
     }
     //Check if the pointer is exist in the heap
     if(in_heap(heap_listp) == true){
-        printf("Pointer %p exist in the heap!\n", heap_listp);
+        dbg_printf("Pointer %p exist in the heap!\n", heap_listp);
     }else{
-        printf("ERROR: Pointer %p not in the heap!\n", heap_listp);
+        dbg_printf("ERROR: Pointer %p not in the heap!\n", heap_listp);
     }
     //check if theres room for free blocks in the list
     if(segfree_list[listpos] == NULL){
-        printf("Found Space in segfree_list at position: %d\n", listpos);
+        dbg_printf("Found Space in segfree_list at position: %d\n", listpos);
     }else{
         //Free block exist in the free list
         if(!GET_ALLOC(HDRP(heap_listp))){
-            printf("The free block at %p is in the free list!\n", HDRP(heap_listp));
+            dbg_printf("The free block at %p is in the free list!\n", HDRP(heap_listp));
         }
     }
 #endif // DEBUG
