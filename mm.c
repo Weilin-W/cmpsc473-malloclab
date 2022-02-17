@@ -65,7 +65,11 @@ static char *heap_listp; //Ptr to first block
 /*
  * Segregation free lists
  */
+#ifdef DEBUG
+#define totalTrace 15
+#else
 #define totalTrace 16
+#endif
 void *segfree_list[totalTrace];
 
 /*
@@ -539,8 +543,8 @@ bool mm_checkheap(int lineno)
         }
         //check if the header size match with the footer size
         if(GET_SIZE(HDRP(heap_listp)) != GET_SIZE(FTRP(heap_listp))){
-            dbg_print("Header size doesn't equal to the footer size\n");
-    }
+            dbg_printf("Header size doesn't equal to the footer size\n");
+        }
     }
 #endif // DEBUG
     return true;
